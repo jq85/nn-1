@@ -1,0 +1,247 @@
+#include "NeuralNetwork.h"
+#include <iostream>
+#include <math.h>
+#include <vector>
+
+
+/*
+* NOTE: IN THE LINES BELOW, THERE ARE OVERLOADED OPERATORS
+*/
+std::vector <float> operator+(const std::vector <float> &m1, const std::vector <float> &m2);
+std::vector <float> operator-(const std::vector <float> &m1, const std::vector <float> &m2);
+std::vector <float> operator*(const std::vector <float> &m1, const std::vector <float> &m2);
+
+
+NeuralNetwork::NeuralNetwork(unsigned int epochs, std::vector<float> X, std::vector<float> y, std::vector<float> W)
+  : epochs(epochs), X(X), y(y), W(W)
+{
+}
+
+
+void NeuralNetwork::run()
+{
+  for (unsigned i = 0; i < this->epochs; ++i)
+  {
+      std::vector<float> pred = sigmoid(dot(this->X, this->W, 4, 4, 1 ) );
+      std::vector<float> pred_error = this->y - pred;
+      std::vector<float> pred_delta = pred_error * sigmoid_d(pred);
+      std::vector<float> W_delta = dot(transpose( &this->X[0], 4, 4 ), pred_delta, 4, 4, 1);
+      this->W = this->W + W_delta;
+
+      if (i == 49)
+      {
+          print( pred, 4, 1 );
+      };
+  };
+}
+
+/*
+*
+*/
+std::vector <float> NeuralNetwork::sigmoid_d(const std::vector <float> &m1)
+{
+
+    /*  Returns the value of the sigmoid function derivative f'(x) = f(x)(1 - f(x)),
+        where f(x) is sigmoid function.
+        Input: m1, a std::vector.
+        Output: x(1 - x) for every element of the input matrix m1.
+    */
+
+    const unsigned long VECTOR_SIZE = m1.size();
+    std::vector <float> output(VECTOR_SIZE);
+
+    for( unsigned i = 0; i != VECTOR_SIZE; ++i )
+    {
+        output[ i ] = m1[ i ] * (1 - m1[ i ]);
+    }
+
+    return output;
+}
+
+/*
+*
+*/
+std::vector <float> NeuralNetwork::sigmoid(const std::vector <float> &m1)
+{
+
+    /*  Returns the value of the sigmoid function f(x) = 1/(1 + e^-x).
+        Input: m1, a std::vector.
+        Output: 1/(1 + e^-x) for every element of the input matrix m1.
+    */
+
+    const unsigned long VECTOR_SIZE = m1.size();
+    std::vector <float> output(VECTOR_SIZE);
+
+
+    for( unsigned i = 0; i != VECTOR_SIZE; ++i )
+    {
+        output[ i ] = 1 / (1 + exp(-m1[ i ]));
+    }
+
+    return output;
+}
+
+
+
+/*
+*
+*/
+std::vector <float> NeuralNetwork::transpose(float *m, const int C, const int R)
+{
+
+    /*  Returns a transpose matrix of input matrix.
+        Inputs:
+            m: std::vector, input matrix
+            C: int, number of columns in the input matrix
+            R: int, number of rows in the input matrix
+        Output: std::vector, transpose matrix mT of input matrix m
+    */
+
+    std::vector <float> mT(C*R);
+
+    for(unsigned n = 0; n != C*R; n++)
+    {
+        unsigned i = n/C;
+        unsigned j = n%C;
+        mT[n] = m[R*j + i];
+    }
+
+    return mT;
+}
+
+/*
+*
+*/
+std::vector <float> NeuralNetwork::dot(const std::vector <float> &m1, const std::vector <float> &m2, const int m1_rows, const int m1_columns, const int m2_columns)
+{
+
+    /*  Returns the product of two matrices: m1 x m2.
+        Inputs:
+            m1: std::vector, left matrix of size m1_rows x m1_columns
+            m2: std::vector, right matrix of size m1_columns x m2_columns (the number of rows in the right matrix
+                must be equal to the number of the columns in the left one)
+            m1_rows: int, number of rows in the left matrix m1
+            m1_columns: int, number of columns in the left matrix m1
+            m2_columns: int, number of columns in the right matrix m2
+        Output: std::vector, m1 * m2, product of two vectors m1 and m2, a matrix of size m1_rows x m2_columns
+    */
+
+    std::vector <float> output(m1_rows*m2_columns);
+
+    for( int row = 0; row != m1_rows; ++row )
+    {
+        for( int col = 0; col != m2_columns; ++col )
+        {
+            output[ row * m2_columns + col ] = 0.f;
+            for( int k = 0; k != m1_columns; ++k )
+            {
+                output[ row * m2_columns + col ] += m1[ row * m1_columns + k ] * m2[ k * m2_columns + col ];
+            }
+        }
+    }
+
+    return output;
+}
+
+/*
+*
+*/
+void NeuralNetwork::print( const std::vector <float> &m, int n_rows, int n_columns )
+{
+
+    /*  "Couts" the input std::vector as n_rows x n_columns matrix.
+        Inputs:
+            m: std::vector, matrix of size n_rows x n_columns
+            n_rows: int, number of rows in the left matrix m1
+            n_columns: int, number of columns in the left matrix m1
+    */
+
+    for( int i = 0; i != n_rows; ++i )
+    {
+        for( int j = 0; j != n_columns; ++j )
+        {
+            std::cout << m[ i * n_columns + j ] << " ";
+        }
+        std::cout << '\n';
+    }
+    std::cout << std::endl;
+}
+
+
+
+/*
+* NOTE: IN THE LINES BELOW, THERE ARE OVERLOADED OPERATORS
+*/
+
+
+/*
+*
+*/
+std::vector <float> operator+(const std::vector <float> &m1, const std::vector <float> &m2)
+{
+
+    /*  Returns the elementwise sum of two vectors.
+        Inputs:
+            m1: a std::vector
+            m2: a std::vector
+        Output: a std::vector, sum of the vectors m1 and m2.
+    */
+
+    const unsigned long VECTOR_SIZE = m1.size();
+    std::vector <float> sum(VECTOR_SIZE);
+
+    for (unsigned i = 0; i != VECTOR_SIZE; ++i)
+    {
+        sum[i] = m1[i] + m2[i];
+    };
+
+    return sum;
+}
+
+/*
+*
+*/
+std::vector <float> operator-(const std::vector <float> &m1, const std::vector <float> &m2)
+{
+
+    /*  Returns the difference between two vectors.
+        Inputs:
+            m1: std::vector
+            m2: std::vector
+        Output: std::vector, m1 - m2, difference between two vectors m1 and m2.
+    */
+
+    const unsigned long VECTOR_SIZE = m1.size();
+    std::vector <float> difference(VECTOR_SIZE);
+
+    for (unsigned i = 0; i != VECTOR_SIZE; ++i)
+    {
+        difference[i] = m1[i] - m2[i];
+    };
+
+    return difference;
+}
+
+/*
+*
+*/
+std::vector <float> operator*(const std::vector <float> &m1, const std::vector <float> &m2)
+{
+
+    /*  Returns the product of two vectors (elementwise multiplication).
+        Inputs:
+            m1: std::vector
+            m2: std::vector
+        Output: std::vector, m1 * m2, product of two vectors m1 and m2
+    */
+
+    const unsigned long VECTOR_SIZE = m1.size();
+    std::vector <float> product(VECTOR_SIZE);
+
+    for (unsigned i = 0; i != VECTOR_SIZE; ++i)
+    {
+        product[i] = m1[i] * m2[i];
+    };
+
+    return product;
+}
